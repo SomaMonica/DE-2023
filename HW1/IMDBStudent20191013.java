@@ -46,7 +46,7 @@ public class MatrixMul{
 			if(isA){
 				for(int i=0; i<n_value; i++){
 					word.set(new byte[0]);
-					word.set(row_id+","+i+","+col_id);
+					word.set(row_id + "," + i + "," + col_id);
 					context.write(word, i_value);
 				}
 			}else if(isB){
@@ -61,6 +61,7 @@ public class MatrixMul{
 	public static class MatrixMulReducer1 extends Reducer<Text,IntWritable,Text,IntWritable>{
 		private IntWritable rslt = new IntWritable();
 		private Text word = new Text();
+		
 		public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException{
 			int mul = 1;
 			StringTokenizer itr = new StringTokenizer(key.toString(), ",");
@@ -68,7 +69,7 @@ public class MatrixMul{
 			int col_id = Integer.parseInt(itr.nextToken().trim());
 			
 			for(IntWritable v : values){
-				mul *= v.get(); //int <- IntWritable.get()
+				mul *= v.get(); 
 			}
 			word.set(row_id + "," + col_id);
 			rslt.set(mul);
@@ -80,16 +81,17 @@ public class MatrixMul{
 		private Text word = new Text();
 		private IntWritable i_value = new IntWritable();
 
-		public void map(Object key, Text Value, Context context) throws IOException, InterruptedException{
+		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
 			StringTokenizer itr = new StringTokenizer(value.toString());
 			String i_key = itr.nextToken().trim();
-			word.set(i_key);
+			
 			int matrix_value = Integer.parseInt(itr.nextToken().trim());
 			i_value.set(matrix_value);
+			word.set(i_key);
 			context.write(word, i_value);
 		}
 	}
-	public static class MatrixMulReducer2 extends Reducer<Text,IntWritable, Text,IntWritable>{
+	public static class MatrixMulReducer2 extends Reducer<Text,IntWritable,Text,IntWritable>{
 		private IntWritable rslt = new IntWritable();
 
 		public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException{
