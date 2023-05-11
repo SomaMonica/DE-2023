@@ -43,6 +43,9 @@ public class Uber {
 		case 7:
 			day = "SAT";
 			break;
+		default:
+			day = "SUN";
+			break;
 		}
 		return day;
 	}
