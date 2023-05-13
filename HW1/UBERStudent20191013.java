@@ -22,7 +22,7 @@ public class Uber {
 		Calendar c = Calendar.getInstance();
 		c.set(year, month, date);
 		String day = null;
-		switch(c.get(Calendar.DAY_OF_WEEK)) {
+		switch(c.get(c.DAY_OF_WEEK)) {
 		case 1:
 			day = "SUN";
 			break;
