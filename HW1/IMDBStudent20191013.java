@@ -11,7 +11,7 @@ import org.apache.hadoop.mapreduce.lib.input.*;
 import org.apache.hadoop.mapreduce.lib.output.*;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.conf.Configuration;
-import java.lang.*;
+//import java.lang.*;
 
 public class Movie {
 	public static MovieMapper extends Mapper<Object, Text, Text, IntWritable>{
@@ -62,7 +62,7 @@ public class Movie {
 		job.setOutputValueClass(IntWritable.class);
 		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
-		FileSystem.get(job.getConfiguration()).delete(new Path(otherArgs[1]), true);
+		//FileSystem.get(job.getConfiguration()).delete(new Path(otherArgs[1]), true);
 		job.waitForCompletion(true);
 	}
 
