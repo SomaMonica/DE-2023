@@ -21,10 +21,11 @@ public class Movie {
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
 			StringTokenizer itr = new StringTokenizer(value.toString(), "::");
 			
+while(itr.hasMoreTokens()){
 			int id = Integer.parseInt(itr.nextToken().trim());
 			String titleNyear = itr.nextToken();
 			String genres = itr.nextToken().trim();
-			
+			}
 			StringTokenizer itr2 = new StringTokenizer(genres, "|");
 			while(itr2.hasMoreTokens()) {
 				outputKey.set(itr2.nextToken().trim());
@@ -51,7 +52,8 @@ public class Movie {
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 		if(otherArgs.length != 2){
-			System.err.println("Usage: Movie <in> <out>"); System.exit(2);
+			System.err.println("Usage: Movie <in> <out>"); 
+   System.exit(2);
 		}
 
 		Job job = new Job(conf, "Movie");
