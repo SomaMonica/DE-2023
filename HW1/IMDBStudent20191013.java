@@ -22,12 +22,12 @@ public class Movie {
 			StringTokenizer itr = new StringTokenizer(value.toString(), "::");
 			
 			int id = Integer.parseInt(itr.nextToken().trim());
-			String titleNyear = itr.nextToken().trim();
+			String titleNyear = itr.nextToken();
 			String genres = itr.nextToken().trim();
 			
 			StringTokenizer itr2 = new StringTokenizer(genres, "|");
 			while(itr2.hasMoreTokens()) {
-				outputKey.set(itr2.nextToken());
+				outputKey.set(itr2.nextToken().trim());
 				context.write(outputKey, outputVal);
 			}
 			
