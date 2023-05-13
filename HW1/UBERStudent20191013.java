@@ -11,6 +11,7 @@ import org.apache.hadoop.mapreduce.lib.input.*;
 import org.apache.hadoop.mapreduce.lib.output.*;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.conf.Configuration;
+import java.time.*;
 
 public class Uber {
 	public static String getDay(String d) throws IOException, InterruptedException {
@@ -19,33 +20,11 @@ public class Uber {
 		int date = Integer.parseInt(itr.nextToken().trim());
 		int year = Integer.parseInt(itr.nextToken().trim());
 		
-		Calendar c = Calendar.getInstance();
-		c.set(year, month, date);
-		String day = null;
-		switch(c.get(c.DAY_OF_WEEK)) {
-		case 1:
-			day = "SUN";
-			break;
-		case 2:
-			day = "MON";
-			break;
-		case 3:
-			day = "TUE";
-			break;
-		case 4:
-			day = "WED";
-			break;
-		case 5:
-			day = "THR";
-			break;
-		case 6:
-			day = "FRI";
-			break;
-		case 7:
-			day = "SAT";
-			break;
-		}
-		return day;
+		LocalDate ld = LocalDate.of(year, month, date);
+	 DayOfWeek dow = ld.getDayOfWeek();
+  
+  String rslt = dow.getDisplayName(TextStyle.SHORT, Locale.US);
+  return rslt.toUpperCase();
 	}
 	public static UberMapper extends Mapper<Object, Text, Text, Text>{
 		private Text outputKey = new Text();
