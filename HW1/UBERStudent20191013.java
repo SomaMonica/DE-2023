@@ -73,7 +73,7 @@ public class Uber {
 			int sumOfVehicles = 0;
 			
 			for(Text v : values) {
-				StringTokenizer itr = new StringTokenizer(v.get(), ",");
+				StringTokenizer itr = new StringTokenizer(v.toString(), ",");
 				int trips = Integer.parseInt(itr.nextToken().trim());
 				int vehicles = Integer.parseInt(itr.nextToken().trim());
 				sumOfTrips += trips;
