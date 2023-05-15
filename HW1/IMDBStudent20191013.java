@@ -15,16 +15,19 @@ import org.apache.hadoop.conf.Configuration;
 
 public class IMDBStudent20191013 {
 	public static class MovieMapper extends Mapper<Object, Text, Text, IntWritable>{
-		private Text outputKey = new Text();
-		private IntWritable outputVal = new IntWritable(1);	
 		
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
+			Text outputKey = new Text();
+			IntWritable outputVal = new IntWritable(1);		
 			
-			StringTokenizer itr = new StringTokenizer(value.toString(), "::");
+			String split[] = value.toString().split("::");
+			String genres = split[2];
 			
-			int id = Integer.parseInt(itr.nextToken().trim());
-			String titleNyear = itr.nextToken();
-			String genres = itr.nextToken().trim();
+			//StringTokenizer itr = new StringTokenizer(value.toString(), "::");
+			
+			//itr.nextToken();
+			//itr.nextToken();
+			//String genres = itr.nextToken().trim();
 			
 			StringTokenizer itr2 = new StringTokenizer(genres, "|");
 			while(itr2.hasMoreTokens()) {
@@ -35,9 +38,8 @@ public class IMDBStudent20191013 {
 		}
 	}
 	public static class MovieReducer extends Reducer<Text, IntWritable, Text, IntWritable>{
-		private IntWritable outputVal = new IntWritable();
 		public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException{
-			
+			IntWritable outputVal = new IntWritable();
 			int sum = 0;
 			for(IntWritable v : values) {
 				sum += v.get();
@@ -52,7 +54,7 @@ public class IMDBStudent20191013 {
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 		if(otherArgs.length != 2){
-			System.err.println("Usage: Movie <in> <out>"); 
+			System.err.println("Usage: IMDBStudent20191013 <in> <out>"); 
    			System.exit(2);
 		}
 
