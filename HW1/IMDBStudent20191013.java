@@ -21,13 +21,11 @@ public class IMDBStudent20191013 {
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
 			
 			StringTokenizer itr = new StringTokenizer(value.toString(), "::");
-			String genres = null;
 			
-			while(itr.hasMoreTokens()){
-				int id = Integer.parseInt(itr.nextToken().trim());
-				String titleNyear = itr.nextToken();
-				genres = itr.nextToken().trim();
-			}
+			int id = Integer.parseInt(itr.nextToken().trim());
+			String titleNyear = itr.nextToken();
+			String genres = itr.nextToken().trim();
+			
 			StringTokenizer itr2 = new StringTokenizer(genres, "|");
 			while(itr2.hasMoreTokens()) {
 				outputKey.set(itr2.nextToken().trim());
