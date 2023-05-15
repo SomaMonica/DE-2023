@@ -13,7 +13,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.conf.Configuration;
 import java.time.*;
 
-public class Uber {
+public class UBERStudent20191013 {
 	public static String getDay(String d) throws IOException, InterruptedException {
 		StringTokenizer itr = new StringTokenizer(d, "/");
 		int month = Integer.parseInt(itr.nextToken().trim());
@@ -21,12 +21,35 @@ public class Uber {
 		int year = Integer.parseInt(itr.nextToken().trim());
 		
 		LocalDate ld = LocalDate.of(year, month, date);
-	 DayOfWeek dow = ld.getDayOfWeek();
-  
-  String rslt = dow.getDisplayName(TextStyle.SHORT, Locale.US);
-  return rslt.toUpperCase();
+	 	DayOfWeek dow = ld.getDayOfWeek();
+  		
+  		String rslt = null;
+  		switch(dow.getValue()){
+	  		case 1:
+	  			rslt = "MON";
+	  			break;
+	  		case 2:
+	  			rslt = "TUE";
+	  			break;
+	  		case 3:
+	  			rslt = "WED";
+	  			break;
+	  		case 4:
+	  			rslt = "THR";
+	  			break;
+	  		case 5:
+	  			rslt = "FRI";
+	  			break;
+	  		case 6:
+	  			rslt = "SAT";
+	  			break;
+	  		case 7:
+	  			rslt = "SUN";
+	  			break;
+  		}
+  		return rslt;
 	}
-	public static UberMapper extends Mapper<Object, Text, Text, Text>{
+	public static class UberMapper extends Mapper<Object, Text, Text, Text>{
 		private Text outputKey = new Text();
 		private Text outputVal = new Text();
 		
@@ -72,15 +95,15 @@ public class Uber {
 		}
 
 		Job job = new Job(conf, "Uber");
-		job.setJarByClass(Uber.class);
+		job.setJarByClass(UBERStudent20191013.class);
 		job.setMapperClass(UberMapper.class);
 		job.setReducerClass(UberReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
 		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
-		//FileSystem.get(job.getConfiguration()).delete(new Path(otherArgs[1]), true);
-		job.waitForCompletion(true);
+		FileSystem.get(job.getConfiguration()).delete(new Path(otherArgs[1]), true);
+		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 
 }
