@@ -13,18 +13,20 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.conf.Configuration;
 //import java.lang.*;
 
-public class Movie {
-	public static MovieMapper extends Mapper<Object, Text, Text, IntWritable>{
+public class IMDBStudent20191013 {
+	public static class MovieMapper extends Mapper<Object, Text, Text, IntWritable>{
 		private Text outputKey = new Text();
-		private IntWritable outputVal = new IntWritable(1);
+		private IntWritable outputVal = new IntWritable(1);	
 		
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
-			StringTokenizer itr = new StringTokenizer(value.toString(), "::");
 			
-while(itr.hasMoreTokens()){
-			int id = Integer.parseInt(itr.nextToken().trim());
-			String titleNyear = itr.nextToken();
-			String genres = itr.nextToken().trim();
+			StringTokenizer itr = new StringTokenizer(value.toString(), "::");
+			String genres = null;
+			
+			while(itr.hasMoreTokens()){
+				int id = Integer.parseInt(itr.nextToken().trim());
+				String titleNyear = itr.nextToken();
+				genres = itr.nextToken().trim();
 			}
 			StringTokenizer itr2 = new StringTokenizer(genres, "|");
 			while(itr2.hasMoreTokens()) {
@@ -36,8 +38,8 @@ while(itr.hasMoreTokens()){
 	}
 	public static class MovieReducer extends Reducer<Text, IntWritable, Text, IntWritable>{
 		private IntWritable outputVal = new IntWritable();
-		
 		public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException{
+			
 			int sum = 0;
 			for(IntWritable v : values) {
 				sum += v.get();
@@ -53,19 +55,18 @@ while(itr.hasMoreTokens()){
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 		if(otherArgs.length != 2){
 			System.err.println("Usage: Movie <in> <out>"); 
-   System.exit(2);
+   			System.exit(2);
 		}
 
-		Job job = new Job(conf, "Movie");
-		job.setJarByClass(Movie.class);
+		Job job = new Job(conf, "IMDBStudent20191013");
+		job.setJarByClass(IMDBStudent20191013.class);
 		job.setMapperClass(MovieMapper.class);
 		job.setReducerClass(MovieReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(IntWritable.class);
 		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
-		//FileSystem.get(job.getConfiguration()).delete(new Path(otherArgs[1]), true);
-		job.waitForCompletion(true);
+		FileSystem.get(job.getConfiguration()).delete(new Path(otherArgs[1]), true);
+		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
-
 }
