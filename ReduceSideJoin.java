@@ -83,13 +83,12 @@ public class ReduceSideJoin{
 	public static void main(String[] args) throws Exception{
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-		int topK = 3;
+		
 		if(otherArgs.length != 2){
 			System.err.println("Usage: ReduceSideJoin <in> <out>"); 
    			System.exit(2);
 		}
-		conf.setInt("topK", topK);
-
+		
 		Job job = new Job(conf, "ReduceSideJoin");
 		job.setJarByClass(ReduceSideJoin.class);
 		job.setMapperClass(ReduceSideJoinMapper.class);
