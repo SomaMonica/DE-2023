@@ -54,14 +54,14 @@ public class IMDBStudent20191013 {
 			}
 		}
 	}
-	public static class AvgReducer extends Reducer<Text, Text, Text, DoubleWritable>{
+	public static class AvgReducer extends Reducer<IntWritable, Text, Text, DoubleWritable>{
 		private Text outputKey = new Text();
 		private DoubleWritable outputVal = new DoubleWritable();
 		
 		String movie_title = "";
 		int cnt = 0;
 		double sum = 0;
-		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException{
+		public void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException{
 			for(Text val : values) {
 				StringTokenizer itr = new StringTokenizer(val.toString(), ",");
 				String file = itr.nextToken().trim();
@@ -140,7 +140,7 @@ public class IMDBStudent20191013 {
 		protected void cleanup(Context context) throws IOException, InterruptedException{
 			while(queue.size() != 0) { //queue가 0될 때까지
 				Movie movie = (Movie) queue.remove(); //head를 빼서
-				context.write(new Text(movie.toString()), NullWritable.get()); //emit
+				context.write(new Text(movie.toString()), NullWritable.get()); //emit(movie_title + avgRating, null)
 			}
 		}
 		
@@ -190,6 +190,10 @@ public class IMDBStudent20191013 {
 		job1.setJarByClass(IMDBStudent20191013.class);
 		job1.setMapperClass(AvgMapper.class);
 		job1.setReducerClass(AvgReducer.class);
+		
+		//job1.setMapOutputKeyClass(IntWritable.class);
+		//job1.setMapOutputValClass(Text.class);
+		
 		job1.setOutputKeyClass(Text.class);
 		job1.setOutputValueClass(DoubleWritable.class);
 		FileInputFormat.addInputPath(job1, new Path(otherArgs[0]));
