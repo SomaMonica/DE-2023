@@ -14,7 +14,7 @@ import org.apache.hadoop.mapreduce.lib.output.*;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.conf.Configuration;
 
-public class YouTubeStudent20191013 {
+public class YoutubeStudent20191013 {
 	
 	public static class AvgMapper extends Mapper<Object, Text, Text, DoubleWritable>{
 		private Text outputKey = new Text();
@@ -90,7 +90,7 @@ public class YouTubeStudent20191013 {
 			StringTokenizer itr = new StringTokenizer(value.toString());
 			String category = itr.nextToken().trim();
 			double avgRating = Double.parseDouble(itr.nextToken().trim());
-			insertQueue(category, avgRating, topK);
+			insertQueue(queue, category, avgRating, topK);
 		}
 		protected void setup(Context context) throws IOException, InterruptedException{
 			Configuration conf = context.getConfiguration();
@@ -117,7 +117,7 @@ public class YouTubeStudent20191013 {
 			
 			String category = itr.nextToken().trim();
 			double avgRating = Double.parseDouble(itr.nextToken().trim());
-			insertQueue(category, avgRating, topK);
+			insertQueue(queue, category, avgRating, topK);
 		}
 		
 		protected void setup(Context context) throws IOException, InterruptedException{
@@ -127,23 +127,28 @@ public class YouTubeStudent20191013 {
 		}
 		
 		protected void cleanup(Context context) throws IOException, InterruptedException{
+			//Text outputKey = new Text();
+			//DoubleWritable outputVal = new DoubleWritable();
 			while(queue.size() != 0) { //queue가 0될 때까지
 				Youtube youtube = queue.remove();
-				context.write(new Text(youtube.getTitle()), new DoubleWritable(youtube.getAvgRating())); 
+				//outputKey.set(youtube.getCategory());
+				//outputVal.set(youtube.getAvgRating());
+				//context.write(outputKey, outputVal);
+				context.write(new Text(youtube.getCategory()), new DoubleWritable(youtube.getAvgRating())); 
 			}
 		}
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args)  throws Exception{
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 		
-		if(otherArgs.length != 2){
+		if(otherArgs.length != 3){
 			System.err.println("Usage: TopKAvg <in> <out>"); 
-   			System.exit(2);
+   			System.exit(3);
 		}
 		
-		conf.setInt("topK", otherArgs[2]);
+		conf.setInt("topK", Integer.parseInt(otherArgs[2]));
 		
 		String first_phase_result = "/first_phase_result";
 		
