@@ -42,12 +42,12 @@ public class IMDBStudent20191013 {
 			String val[] = value.toString().split("::");
 			if(isMovie) {
 				if(isFantasy(val[2])) {
-					outputKey.set(val[0]); // Movie ID
+					outputKey.set(Integer.parseInt(val[0])); // Movie ID
 					outputVal.set("M," + val[1]); // M,Title(year)
 					context.write(outputKey, outputVal);
 				}
 			}else {
-				outputKey.set(val[1]); // Movie ID
+				outputKey.set(Integer.parseInt(val[1])); // Movie ID
 				outputVal.set("R," + val[2]); // R,Rating
 				context.write(outputKey, outputVal);
 			}
@@ -128,7 +128,7 @@ public class IMDBStudent20191013 {
 			StringTokenizer itr = new StringTokenizer(value.toString());
 			String title = itr.nextToken().trim();
 			double avgRating = Double.parseDouble(itr.nextToken().trim());
-			insertQueue(title, avgRating, topK);
+			insertQueue(queue, title, avgRating, topK);
 		}
 		protected void setup(Context context) throws IOException, InterruptedException{
 			Configuration conf = context.getConfiguration();
@@ -155,7 +155,7 @@ public class IMDBStudent20191013 {
 			
 			String title = itr.nextToken().trim();
 			double avgRating = Double.parseDouble(itr.nextToken().trim());
-			insertQueue(title, avgRating, topK);
+			insertQueue(queue, title, avgRating, topK);
 		}
 		
 		protected void setup(Context context) throws IOException, InterruptedException{
@@ -172,16 +172,16 @@ public class IMDBStudent20191013 {
 		}
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception{
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 		
-		if(otherArgs.length != 2){
+		if(otherArgs.length != 3){
 			System.err.println("Usage: TopKAvg <in> <out>"); 
-   			System.exit(2);
+   			System.exit(3);
 		}
 		
-		conf.setInt("topK", otherArgs[2]);
+		conf.setInt("topK", Integer.parseInt(otherArgs[2]));
 		
 		String first_phase_result = "/first_phase_result";
 		
