@@ -103,13 +103,13 @@ public class IMDBStudent20191013 {
 
 		@Override
 		public int compare(Movie o1, Movie o2) {
-			if(o1.avgRating > o2.avgRating) return 1; // avgRating 큰 순서대로 = 내림차순
+			if(o1.avgRating < o2.avgRating) return 1; // avgRating 큰 순서대로 = 내림차순
 			if(o1.avgRating > o2.avgRating) return -1; 	
 			return 0;
 		}
 	}
 	
-	public static void insertQueue(PriorityQueue q, String title, double avgRating, int topK) {
+	public static void insertQueue(PriorityQueue<Movie> q, String title, double avgRating, int topK) {
 		Movie head = (Movie) q.peek();
 		if(q.size() < topK || head.avgRating < avgRating) {
 			Movie movie = new Movie(title, avgRating);
@@ -144,7 +144,7 @@ public class IMDBStudent20191013 {
 		
 	}
 	
-	public static class TopKReducer extends Reducer<Text,NullWritable,Text,DoubleWritable>{
+	public static class TopKReducer extends Reducer<Text,DoubleWritable,Text,DoubleWritable>{
 		private PriorityQueue<Movie> queue;
 		private Comparator<Movie> comp = new MovieComparator();
 		private int topK;
