@@ -67,12 +67,12 @@ public class YoutubeStudent20191013 {
 		@Override
 		public int compare(Youtube o1, Youtube o2) {
 			if(o1.avgRating > o2.avgRating) return 1; // avgRating 큰 순서대로 = 내림차순
-			if(o1.avgRating > o2.avgRating) return -1; 	
+			if(o1.avgRating < o2.avgRating) return -1; 	
 			return 0;
 		}
 	}
 	
-	public static void insertQueue(PriorityQueue q, String category, double avgRating, int topK) {
+	public static void insertQueue(PriorityQueue<Youtube> q, String category, double avgRating, int topK) {
 		Youtube head = (Youtube) q.peek();
 		if(q.size() < topK || head.avgRating < avgRating) {
 			Youtube youtube = new Youtube(category, avgRating);
