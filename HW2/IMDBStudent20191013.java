@@ -18,11 +18,9 @@ import org.apache.hadoop.conf.Configuration;
 public class IMDBStudent20191013 {
 	
 	public static boolean isFantasy(String genres) {
-		StringTokenizer itr = new StringTokenizer(genres.trim(), "|");
-		while(itr.hasMoreTokens()) {
-			if((itr.nextToken().trim()).equals("Fantasy")) return true;
-		}
-		return false;
+		if(genres.toLowerCase().contains("fantasy")){
+			return true;
+		}return false;
 	}
 	
 	public static class AvgMapper extends Mapper<Object, Text, IntWritable, Text>{
@@ -75,7 +73,7 @@ public class IMDBStudent20191013 {
 			
 			if(movie_title != "") {
 				outputKey.set(movie_title);
-				outputVal.set(sum/(double)cnt);
+				outputVal.set(sum/cnt);
 				context.write(outputKey, outputVal);
 			}
 		}
