@@ -18,19 +18,20 @@ import org.apache.hadoop.conf.Configuration;
 public class IMDBStudent20191013 {
 	
 	public static boolean isFantasy(String genres) {
-		if(genres.toLowerCase().contains("fantasy")){
+		if (genres.toLowerCase().contains("fantasy")) {
 			return true;
-		}return false;
+		}
+		return false;
 	}
 	
-	public static class AvgMapper extends Mapper<Object, Text, IntWritable, Text>{
+	public static class AvgMapper extends Mapper<Object, Text, Text, Text>{
 		boolean isMovie = true;
-		private IntWritable outputKey = new IntWritable();   
+		private Text outputKey = new Text();   
 		private Text outputVal = new Text();
 		
 		protected void setup(Context context) throws IOException, InterruptedException{
 			String filename = ((FileSplit)context.getInputSplit()).getPath().getName();
-			if(filename.indexOf("movie") != -1) {
+			if(filename.indexOf("movies.dat") != -1) {
 				isMovie = true;
 			}else {
 				isMovie = false;
@@ -41,25 +42,25 @@ public class IMDBStudent20191013 {
 			String val[] = value.toString().split("::");
 			if(isMovie) {
 				if(isFantasy(val[2])) {
-					outputKey.set(Integer.parseInt(val[0])); // Movie ID
+					outputKey.set(val[0]); // Movie ID
 					outputVal.set("M," + val[1]); // M,Title(year)
 					context.write(outputKey, outputVal);
 				}
 			}else {
-				outputKey.set(Integer.parseInt(val[1])); // Movie ID
+				outputKey.set(val[1]); // Movie ID
 				outputVal.set("R," + val[2]); // R,Rating
 				context.write(outputKey, outputVal);
 			}
 		}
 	}
-	public static class AvgReducer extends Reducer<IntWritable, Text, Text, DoubleWritable>{
+	public static class AvgReducer extends Reducer<Text, Text, Text, DoubleWritable>{
 		private Text outputKey = new Text();
 		private DoubleWritable outputVal = new DoubleWritable();
 		
 		String movie_title = "";
 		int cnt = 0;
 		double sum = 0;
-		public void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException{
+		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException{
 			for(Text val : values) {
 				StringTokenizer itr = new StringTokenizer(val.toString(), ",");
 				String file = itr.nextToken().trim();
@@ -73,7 +74,7 @@ public class IMDBStudent20191013 {
 			
 			if(movie_title != "") {
 				outputKey.set(movie_title);
-				outputVal.set(sum/cnt);
+				outputVal.set(sum/(double)cnt);
 				context.write(outputKey, outputVal);
 			}
 		}
@@ -109,7 +110,7 @@ public class IMDBStudent20191013 {
 		}
 	}
 	
-	public static void insertQueue(PriorityQueue<Movie> q, String title, double avgRating, int topK) {
+	public static void insertQueue(PriorityQueue q, String title, double avgRating, int topK) {
 		Movie head = (Movie) q.peek();
 		if(q.size() < topK || head.avgRating < avgRating) {
 			Movie movie = new Movie(title, avgRating);
@@ -138,13 +139,13 @@ public class IMDBStudent20191013 {
 		protected void cleanup(Context context) throws IOException, InterruptedException{
 			while(queue.size() != 0) { //queue가 0될 때까지
 				Movie movie = (Movie) queue.remove(); //head를 빼서
-				context.write(new Text(movie.toString()), NullWritable.get()); //emit(movie_title + avgRating, null)
+				context.write(new Text(movie.toString()), NullWritable.get()); //emit
 			}
 		}
 		
 	}
 	
-	public static class TopKReducer extends Reducer<Text,DoubleWritable,Text,DoubleWritable>{
+	public static class TopKReducer extends Reducer<Text,NullWritable,Text,DoubleWritable>{
 		private PriorityQueue<Movie> queue;
 		private Comparator<Movie> comp = new MovieComparator();
 		private int topK;
@@ -188,10 +189,6 @@ public class IMDBStudent20191013 {
 		job1.setJarByClass(IMDBStudent20191013.class);
 		job1.setMapperClass(AvgMapper.class);
 		job1.setReducerClass(AvgReducer.class);
-		
-		//job1.setMapOutputKeyClass(IntWritable.class);
-		//job1.setMapOutputValClass(Text.class);
-		
 		job1.setOutputKeyClass(Text.class);
 		job1.setOutputValueClass(DoubleWritable.class);
 		FileInputFormat.addInputPath(job1, new Path(otherArgs[0]));
