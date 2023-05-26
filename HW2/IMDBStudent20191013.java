@@ -103,8 +103,8 @@ public class IMDBStudent20191013 {
 
 		@Override
 		public int compare(Movie o1, Movie o2) {
-			if(o1.avgRating < o2.avgRating) return 1; // avgRating 큰 순서대로 = 내림차순
-			if(o1.avgRating > o2.avgRating) return -1; 	
+			if(o1.avgRating > o2.avgRating) return 1; // avgRating 큰 순서대로 = 내림차순
+			if(o1.avgRating < o2.avgRating) return -1; 	
 			return 0;
 		}
 	}
