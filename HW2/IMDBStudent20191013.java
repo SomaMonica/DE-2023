@@ -32,7 +32,7 @@ public class IMDBStudent20191013 {
 		
 		protected void setup(Context context) throws IOException, InterruptedException{
 			String filename = ((FileSplit)context.getInputSplit()).getPath().getName();
-			if(filename.indexOf("movies.dat") != -1) {
+			if(filename.indexOf("movie") != -1) {
 				isMovie = true;
 			}else {
 				isMovie = false;
