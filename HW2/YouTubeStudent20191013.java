@@ -21,7 +21,7 @@ public class YouTubeStudent20191013 {
 		private Text outputKey = new Text();
 		private DoubleWritable outputVal = new DoubleWritable();
 		
-		public void map(Object key, Text value, Context context) throws IOException, InterruptedException, NumberFormatExceptin{
+		public void map(Object key, Text value, Context context) throws IOException, InterruptedException, NumberFormatException{
 			String val[] = value.toString().split("|");
 			outputKey.set(val[3]);
 			outputVal.set(Double.parseDouble((val[6]).trim()));
