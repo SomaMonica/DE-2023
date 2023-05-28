@@ -85,7 +85,7 @@ public class IMDBStudent20191013 {
 			else return false;
 		}
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException{
-			String[] val = value.toSting().split("::"); 
+			String val[] = value.toSting().split("::"); 
  			if(isMovie) {
 				if(isFantasy(val[2])) {
 					DoubleKey outputK = new DoubleKey(val[0], "M");
@@ -225,7 +225,7 @@ public class IMDBStudent20191013 {
 		
 		if(otherArgs.length != 3){
 			System.err.println("Usage: TopKAvg <in> <out>"); 
-   			System.exit(3);
+   			System.exit(1);
 		}
 		
 		conf.setInt("topK", Integer.parseInt(otherArgs[2]));
