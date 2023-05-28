@@ -1,7 +1,4 @@
-import java.io.IOException;
-import java.util.Comparator;
-import java.util.PriorityQueue;
-import java.util.StringTokenizer;
+import java.io.*;
 import java.util.*;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.conf.*;
@@ -25,14 +22,11 @@ public class YouTubeStudent20191013 {
 			this.category = _category;
 			this.avgRating = _avgRating;
 		}
-		public String toString() {
-			return category + "," + avgRating;
-		}
 		public String getCategory() {
-			return category;
+			return this.category;
 		}
 		public double getAvgRating() {
-			return avgRating;
+			return this.avgRating;
 		}
 		
 	}
@@ -47,7 +41,7 @@ public class YouTubeStudent20191013 {
 		}
 	}
 	
-	public static void insertQueue(PriorityQueue<Youtube> q, String category, double avgRating, int topK) {
+	public static void insertQueue(PriorityQueue q, String category, double avgRating, int topK) {
 		Youtube head = (Youtube) q.peek();
 		if(q.size() < topK || head.avgRating < avgRating) {
 			Youtube youtube = new Youtube(category, avgRating);
@@ -102,12 +96,11 @@ public class YouTubeStudent20191013 {
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 		
 		if(otherArgs.length != 3){
-			System.err.println("Usage: YouTubeStudent20191013 <in> <out>"); 
+			System.err.println("Usage: YouTubeStudent20191013 <in> <out> <k>"); 
    			System.exit(2);
 		}
 		
-		conf.setInt("topK", Integer.parseInt(otherArgs[2]));
-		
+		conf.setInt("topK", Integer.valueOf(otherArgs[2]));
 
 		Job job = new Job(conf, "YouTubeStudent20191013");
 		job.setJarByClass(YouTubeStudent20191013.class);
@@ -125,7 +118,6 @@ public class YouTubeStudent20191013 {
 		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
 		FileSystem.get(job.getConfiguration()).delete(new Path(otherArgs[1]), true);
 		System.exit(job.waitForCompletion(true) ? 0 : 1);
-		
 	}
 
 }
