@@ -41,9 +41,6 @@ public class IMDBStudent20191013 {
 			if(ret != 0) return ret;
 			return tableName.compareTo(d.tableName); //M --> R
 		}
-		public String toString(){
-			return movieId + \t + tableName;
-		}
 	}
 	public static class FirstPartitioner extends Partitioner<DoubleKey, Text>{
 		public int getPartition(DoubleKey key, Text value, int numPartition) {
@@ -150,7 +147,7 @@ public class IMDBStudent20191013 {
 			this.title = _title;
 			this.avgRating = _avgRating;
 		}
-		public String toString() {
+		public toString() {
 			return title + "," + avgRating;
 		}
 		public String getTitle() {
