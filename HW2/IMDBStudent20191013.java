@@ -1,9 +1,6 @@
-import java.io.IOException;
-import java.util.Comparator;
-import java.util.PriorityQueue;
-import java.util.StringTokenizer;
 import java.lang.InterruptedException;
 import java.util.*;
+import java.io.*;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.FileSystem;
@@ -16,70 +13,121 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.conf.Configuration;
 
 public class IMDBStudent20191013 {
-	
-	public static boolean isFantasy(String genres) {
-		if (genres.toLowerCase().contains("fantasy")) {
-			return true;
-		}
-		return false;
-	}
-	
-	public static class AvgMapper extends Mapper<Object, Text, Text, Text>{
-		boolean isMovie = true;
-		private Text outputKey = new Text();   
-		private Text outputVal = new Text();
+	public static class DoubleKey implements WritableComparable{
+		String movieId = new String(); // join key = MovieID
+		String tableName = new String(); // Movies.dat & Ratings.dat
 		
-		protected void setup(Context context) throws IOException, InterruptedException{
-			String filename = ((FileSplit)context.getInputSplit()).getPath().getName();
-			if(filename.indexOf("movies.dat") != -1) {
-				isMovie = true;
-			}else {
-				isMovie = false;
-			}
+		public DoubleKey(String movieId, String tableName) {
+			super();
+			this.movieId = movieId;
+			this.tableName = tableName;
 		}
-	
-		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
-			String val[] = value.toString().split("::");
-			if(isMovie) {
+		
+		public DoubleKey() {}
+		
+		//WritableComparable interface methods
+		public void readFields(DataInput in) throws IOException{
+			movieId = in.readUTF();
+			tableName = in.readUTF();
+		}
+		public void write(DataOutput out) throws IOException{
+			out.writeUTF(movieId);
+			out.writeUTF(tableName);
+		}
+		
+		public int compareTo(Object o1) {
+			DoubleKey d = (DoubleKey) o1;
+			int ret = movieId.compareTo(d.movieId);
+			if(ret != 0) return ret;
+			return tableName.compareTo(d.tableName); //M --> R
+		}
+	}
+	public static class FirstPartitioner extends Partitioner<DoubleKey, Text>{
+		public int getPartition(DoubleKey key, Text value, int numPartition) {
+			return key.movieId.hashCode()%numPartition;
+		}
+	}
+	public static class FirstGroupingComparator extends WritableComparator{
+		protected FirstGroupingComparator() {
+			super(DoubleKey.class, true);
+		}
+		public int compare(WritableComparable w1, WritableComparable w2) {
+			DoubleKey d1 = (DoubleKey) w1;
+			DoubleKey d2 = (DoubleKey) w2;
+			
+			return d1.movieId.compareTo(d2.movieId); // movieId만 가지고 비교 - 같은 value list에 넣음
+		}
+	}
+	public static class CompositeKeyComparator extends WritableComparator{
+		protected CompositeKeyComparator() {
+			super(DoubleKey.class, true);
+		}
+		public int compare(WritableComparable w1, WritableComparable w2) {
+			DoubleKey d1 = (DoubleKey) w1;
+			DoubleKey d2 = (DoubleKey) w2;
+			
+			int rslt = d1.movieId.compareTo(d2.movieId);
+			if(rslt == 0) {
+				rslt = d1.tableName.compareTo(d2.tableName);
+			}
+			return rslt;
+		}
+	}
+	public static class JoinNAvgMapper extends Mapper<LongWritable, Text, DoubleKey, Text>{
+		boolean isMovie = true;
+		
+		protected void setup(Context ctx) throws IOException, InterruptedException{
+			String filename = ((FileSplit)ctx.getInputSplit()).getPath().getName();
+			if(filename.indexOf("movies.dat") == -1) isMovie = false;
+		}
+		public boolean isFantasy(String genres) {
+			if(genres.toLowerCase().contains("fantasy")) return true;
+			else return false;
+		}
+		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException{
+			String[] val = value.toSting().split("::"); 
+ 			if(isMovie) {
 				if(isFantasy(val[2])) {
-					outputKey.set(val[0]); // Movie ID
-					outputVal.set("M," + val[1]); // M,Title(year)
-					context.write(outputKey, outputVal);
+					DoubleKey outputK = new DoubleKey(val[0], "M");
+					context.write(outputK, new Text(val[1])); // Assasins (1995)
 				}
 			}else {
-				outputKey.set(val[1]); // Movie ID
-				outputVal.set("R," + val[2]); // R,Rating
-				context.write(outputKey, outputVal);
+				DoubleKey outputK = new DoubleKey(val[1], "R");
+				context.write(outputK, new Text(val[2])); // 5
 			}
 		}
 	}
-	public static class AvgReducer extends Reducer<Text, Text, Text, DoubleWritable>{
-		private Text outputKey = new Text();
-		private DoubleWritable outputVal = new DoubleWritable();
-		
-		String movie_title = "";
-		int cnt = 0;
-		double sum = 0;
-		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException{
+	public static class JoinNAvgReducer extends Reducer<DoubleKey, Text, Text, DoubleWritable>{
+		public static boolean isNumeric(String str) { 
+			  try {  
+			    Double.parseDouble(str);  
+			    return true;
+			  } catch(NumberFormatException e){  
+			    return false;  
+			  }  
+			}
+		public void reduce(DoubleKey key, Iterable<Text> values, Context context) throws IOException, InterruptedException{
+			int cnt = 0;
+			double sum = 0;
+			String movieTitle = "";
 			for(Text val : values) {
-				StringTokenizer itr = new StringTokenizer(val.toString(), ",");
-				String file = itr.nextToken().trim();
-				if(file.equals("M")) {
-					movie_title = itr.nextToken().trim();
+				if(cnt == 0) { //최초 1회
+					movieTitle = val.toString().trim();
+					if(isNumeric(movieTitle)) { // this isn't Fantasy movie
+						break; // out of for-each loop
+					}
+					cnt++;
 				}else {
-					sum += Integer.parseInt(itr.nextToken().trim());
+					sum += Double.parseDouble(val.toString().trim());
 					cnt++;
 				}
 			}
-			
-			if(movie_title != "") {
-				outputKey.set(movie_title);
-				outputVal.set(sum/(double)cnt);
-				context.write(outputKey, outputVal);
+			cnt -= 1;
+			if(sum > 0) {
+				context.write(new Text(movieTitle), new DoubleWritable(sum/cnt));
 			}
 		}
 	}
-	
 	public static class Movie{
 		public String title;
 		public double avgRating;
@@ -171,7 +219,6 @@ public class IMDBStudent20191013 {
 			}
 		}
 	}
-	
 	public static void main(String[] args) throws Exception{
 		Configuration conf = new Configuration();
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
@@ -187,12 +234,19 @@ public class IMDBStudent20191013 {
 		
 		Job job1 = new Job(conf, "AvgOfRating");
 		job1.setJarByClass(IMDBStudent20191013.class);
-		job1.setMapperClass(AvgMapper.class);
-		job1.setReducerClass(AvgReducer.class);
-		job1.setMapOutputKeyClass(Text.class);
+		job1.setMapperClass(JoinNAvgMapper.class);
+		job1.setReducerClass(JoinNAvgReducer.class);
+		
+		job1.setMapOutputKeyClass(DoubleKey.class);
 		job1.setMapOutputValueClass(Text.class);
+		
+		job1.setPartitionerClass(FirstPartitioner.class);
+		job1.setGroupingComparatorClass(FirstGroupingComparator.class);
+		job1.setSortComparatorClass(CompositeKeyComparator.class);
+		
 		job1.setOutputKeyClass(Text.class);
 		job1.setOutputValueClass(DoubleWritable.class);
+		
 		FileInputFormat.addInputPath(job1, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job1, new Path(first_phase_result));
 		FileSystem.get(job1.getConfiguration()).delete(new Path(first_phase_result), true);
@@ -209,5 +263,4 @@ public class IMDBStudent20191013 {
 		FileSystem.get(job2.getConfiguration()).delete(new Path(otherArgs[1]), true);
 		System.exit(job2.waitForCompletion(true) ? 0 : 1);
 	}
-
 }
