@@ -13,6 +13,7 @@ import org.apache.hadoop.mapreduce.lib.input.*;
 import org.apache.hadoop.mapreduce.lib.output.*;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.conf.Configuration;
+import java.lang.NumberFormatException;
 
 public class YouTubeStudent20191013 {
 	
@@ -20,7 +21,7 @@ public class YouTubeStudent20191013 {
 		private Text outputKey = new Text();
 		private DoubleWritable outputVal = new DoubleWritable();
 		
-		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
+		public void map(Object key, Text value, Context context) throws IOException, InterruptedException, NumberFormatExceptin{
 			String val[] = value.toString().split("|");
 			outputKey.set(val[3]);
 			outputVal.set(Double.parseDouble((val[6]).trim()));
@@ -161,7 +162,7 @@ public class YouTubeStudent20191013 {
 		FileInputFormat.addInputPath(job1, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job1, new Path(first_phase_result));
 		FileSystem.get(job1.getConfiguration()).delete(new Path(first_phase_result), true);
-		//System.exit(job1.waitForCompletion(true) ? 0 : 1);
+		System.exit(job1.waitForCompletion(true) ? 0 : 1);
 		
 		Job job2 = new Job(conf, "TopKAvgOfRating");
 		job2.setJarByClass(YouTubeStudent20191013.class);
@@ -172,14 +173,8 @@ public class YouTubeStudent20191013 {
 		FileInputFormat.addInputPath(job2, new Path(first_phase_result));
 		FileOutputFormat.setOutputPath(job2, new Path(otherArgs[1]));
 		FileSystem.get(job2.getConfiguration()).delete(new Path(otherArgs[1]), true);
-		//System.exit(job2.waitForCompletion(true) ? 0 : 1);
+		System.exit(job2.waitForCompletion(true) ? 0 : 1);
 		
-		int job1Status = job1.waitForCompletion(true) ? 0 : 1;
-		if(job1Status == 0){
-			System.exit(job2.waitForCompletion(true) ? 0 : 1);
-		}else{
-			System.exit(job1Status);
-		}
 	}
 
 }
