@@ -17,32 +17,6 @@ import java.lang.NumberFormatException;
 
 public class YouTubeStudent20191013 {
 	
-	public static class AvgMapper extends Mapper<Object, Text, Text, DoubleWritable>{
-		private Text outputKey = new Text();
-		private DoubleWritable outputVal = new DoubleWritable();
-		
-		public void map(Object key, Text value, Context context) throws IOException, InterruptedException, NumberFormatException{
-			String val[] = value.toString().split("|");
-			outputKey.set(val[3]);
-			outputVal.set(Double.parseDouble((val[6]).trim()));
-			context.write(outputKey, outputVal);
-		}
-	}
-	public static class AvgReducer extends Reducer<Text, DoubleWritable, Text, DoubleWritable>{
-		private DoubleWritable outputVal = new DoubleWritable();
-
-		int cnt = 0;
-		double sum = 0;
-		public void reduce(Text key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException{
-			for(DoubleWritable val : values) {
-				sum += val.get();
-				cnt++;
-			}
-			outputVal.set(sum/(double)cnt);
-			context.write(key, outputVal);
-		}
-	}
-	
 	public static class Youtube{
 		public String category;
 		public double avgRating;
@@ -82,43 +56,31 @@ public class YouTubeStudent20191013 {
 		}
 	}
 	
-	public static class TopKMapper extends Mapper<Object, Text, Text, NullWritable>{
-		private PriorityQueue<Youtube> queue;
-		private Comparator<Youtube> comp = new YoutubeComparator();
-		private int topK;
-		
+	public static class YouTubeMapper extends Mapper<Object, Text, Text, DoubleWritable>{
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
-			StringTokenizer itr = new StringTokenizer(value.toString());
-			String category = itr.nextToken().trim();
-			double avgRating = Double.parseDouble(itr.nextToken().trim());
-			insertQueue(queue, category, avgRating, topK);
-		}
-		protected void setup(Context context) throws IOException, InterruptedException{
-			Configuration conf = context.getConfiguration();
-			topK = conf.getInt("topK" , -1);
-			queue = new PriorityQueue<Youtube> (topK, comp); //comp 기준으로 size가 topK인 queue 생성
-		}
-		
-		protected void cleanup(Context context) throws IOException, InterruptedException{
-			while(queue.size() != 0) { //queue가 0될 때까지
-				Youtube youtube = (Youtube) queue.remove(); //head를 빼서
-				context.write(new Text(youtube.toString()), NullWritable.get()); //emit
-			}
+			String[] val = value.toString().split("|");
+			String category = val[3];
+			String avgRating = val[6].trim();
+			context.write(new Text(category), new DoubleWritable(Double.valueOf(avgRating)));
+			
 		}
 		
 	}
 	
-	public static class TopKReducer extends Reducer<Text,NullWritable,Text,DoubleWritable>{
+	public static class YouTubeReducer extends Reducer<Text,DoubleWritable,Text,DoubleWritable>{
 		private PriorityQueue<Youtube> queue;
 		private Comparator<Youtube> comp = new YoutubeComparator();
 		private int topK;
 		
-		public void reduce(Text key, Iterable<NullWritable> value, Context context) throws IOException, InterruptedException{
-			StringTokenizer itr = new StringTokenizer(key.toString(), ","); // value가 아니라 key를 토큰화
+		public void reduce(Text key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException{
+			int cnt = 0;
+			double sum = 0;
+			for(DoubleWritable val : values) {
+				sum += val.get();
+				cnt++;
+			}
 			
-			String category = itr.nextToken().trim();
-			double avgRating = Double.parseDouble(itr.nextToken().trim());
-			insertQueue(queue, category, avgRating, topK);
+			insertQueue(queue, key.toString(), sum/cnt, topK);
 		}
 		
 		protected void setup(Context context) throws IOException, InterruptedException{
@@ -128,13 +90,8 @@ public class YouTubeStudent20191013 {
 		}
 		
 		protected void cleanup(Context context) throws IOException, InterruptedException{
-			//Text outputKey = new Text();
-			//DoubleWritable outputVal = new DoubleWritable();
 			while(queue.size() != 0) { //queue가 0될 때까지
 				Youtube youtube = queue.remove();
-				//outputKey.set(youtube.getCategory());
-				//outputVal.set(youtube.getAvgRating());
-				//context.write(outputKey, outputVal);
 				context.write(new Text(youtube.getCategory()), new DoubleWritable(youtube.getAvgRating())); 
 			}
 		}
@@ -145,35 +102,29 @@ public class YouTubeStudent20191013 {
 		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 		
 		if(otherArgs.length != 3){
-			System.err.println("Usage: TopKAvg <in> <out>"); 
-   			System.exit(1);
+			System.err.println("Usage: YouTubeStudent20191013 <in> <out>"); 
+   			System.exit(2);
 		}
 		
 		conf.setInt("topK", Integer.parseInt(otherArgs[2]));
 		
-		String first_phase_result = "/first_phase_result";
+
+		Job job = new Job(conf, "YouTubeStudent20191013");
+		job.setJarByClass(YouTubeStudent20191013.class);
+		job.setMapperClass(YouTubeMapper.class);
+		job.setReducerClass(YouTubeReducer.class);
+		job.setNumReduceTasks(1);
 		
-		Job job1 = new Job(conf, "AvgOfRating");
-		job1.setJarByClass(YouTubeStudent20191013.class);
-		job1.setMapperClass(AvgMapper.class);
-		job1.setReducerClass(AvgReducer.class);
-		job1.setOutputKeyClass(Text.class);
-		job1.setOutputValueClass(DoubleWritable.class);
-		FileInputFormat.addInputPath(job1, new Path(otherArgs[0]));
-		FileOutputFormat.setOutputPath(job1, new Path(first_phase_result));
-		FileSystem.get(job1.getConfiguration()).delete(new Path(first_phase_result), true);
-		System.exit(job1.waitForCompletion(true) ? 0 : 1);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(DoubleWritable.class);
 		
-		Job job2 = new Job(conf, "TopKAvgOfRating");
-		job2.setJarByClass(YouTubeStudent20191013.class);
-		job2.setMapperClass(TopKMapper.class);
-		job2.setReducerClass(TopKReducer.class);
-		job2.setOutputKeyClass(Text.class);
-		job2.setOutputValueClass(DoubleWritable.class);
-		FileInputFormat.addInputPath(job2, new Path(first_phase_result));
-		FileOutputFormat.setOutputPath(job2, new Path(otherArgs[1]));
-		FileSystem.get(job2.getConfiguration()).delete(new Path(otherArgs[1]), true);
-		System.exit(job2.waitForCompletion(true) ? 0 : 1);
+		job.setOutputKeyClass(Text.class);
+		job.setOutputValueClass(DoubleWritable.class);
+		
+		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
+		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
+		FileSystem.get(job.getConfiguration()).delete(new Path(otherArgs[1]), true);
+		System.exit(job.waitForCompletion(true) ? 0 : 1);
 		
 	}
 
