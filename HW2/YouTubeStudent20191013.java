@@ -14,7 +14,7 @@ import org.apache.hadoop.mapreduce.lib.output.*;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.conf.Configuration;
 
-public class YoutubeStudent20191013 {
+public class YouTubeStudent20191013 {
 	
 	public static class AvgMapper extends Mapper<Object, Text, Text, DoubleWritable>{
 		private Text outputKey = new Text();
@@ -153,7 +153,7 @@ public class YoutubeStudent20191013 {
 		String first_phase_result = "/first_phase_result";
 		
 		Job job1 = new Job(conf, "AvgOfRating");
-		job1.setJarByClass(YoutubeStudent20191013.class);
+		job1.setJarByClass(YouTubeStudent20191013.class);
 		job1.setMapperClass(AvgMapper.class);
 		job1.setReducerClass(AvgReducer.class);
 		job1.setOutputKeyClass(Text.class);
@@ -164,7 +164,7 @@ public class YoutubeStudent20191013 {
 		System.exit(job1.waitForCompletion(true) ? 0 : 1);
 		
 		Job job2 = new Job(conf, "TopKAvgOfRating");
-		job2.setJarByClass(YoutubeStudent20191013.class);
+		job2.setJarByClass(YouTubeStudent20191013.class);
 		job2.setMapperClass(TopKMapper.class);
 		job2.setReducerClass(TopKReducer.class);
 		job2.setOutputKeyClass(Text.class);
