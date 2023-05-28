@@ -189,6 +189,8 @@ public class IMDBStudent20191013 {
 		job1.setJarByClass(IMDBStudent20191013.class);
 		job1.setMapperClass(AvgMapper.class);
 		job1.setReducerClass(AvgReducer.class);
+		job1.setMapOutputKeyClass(Text.class);
+		job1.setMapOutputValueClass(Text.class);
 		job1.setOutputKeyClass(Text.class);
 		job1.setOutputValueClass(DoubleWritable.class);
 		FileInputFormat.addInputPath(job1, new Path(otherArgs[0]));
