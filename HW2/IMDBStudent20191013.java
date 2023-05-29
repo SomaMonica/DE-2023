@@ -1,29 +1,27 @@
-import java.lang.InterruptedException;
-import java.util.*;
 import java.io.*;
-import org.apache.hadoop.fs.*;
+import java.util.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapred.lib.*;
 import org.apache.hadoop.mapreduce.lib.input.*;
 import org.apache.hadoop.mapreduce.lib.output.*;
 import org.apache.hadoop.util.GenericOptionsParser;
-import org.apache.hadoop.conf.Configuration;
 
 public class IMDBStudent20191013 {
 	public static class DoubleKey implements WritableComparable{
 		String movieId = new String(); // join key = MovieID
 		String tableName = new String(); // Movies.dat & Ratings.dat
-		
+
+		public DoubleKey() {}
+
 		public DoubleKey(String movieId, String tableName) {
 			super();
 			this.movieId = movieId;
 			this.tableName = tableName;
 		}
-		
-		public DoubleKey() {}
 		
 		//WritableComparable interface methods
 		public void readFields(DataInput in) throws IOException{
@@ -67,7 +65,7 @@ public class IMDBStudent20191013 {
 			DoubleKey d2 = (DoubleKey) w2;
 			
 			int rslt = d1.movieId.compareTo(d2.movieId);
-			if(rslt == 0) {
+			if(0 == rslt) {
 				rslt = d1.tableName.compareTo(d2.tableName);
 			}
 			return rslt;
@@ -76,9 +74,10 @@ public class IMDBStudent20191013 {
 	public static class TopKMovieMapper extends Mapper<Object, Text, DoubleKey, Text>{
 		boolean isMovie = true;
 		
-		protected void setup(Context ctx) throws IOException, InterruptedException{
-			String filename = ((FileSplit)ctx.getInputSplit()).getPath().getName();
-			if(filename.indexOf("movies.dat") == -1) isMovie = false;
+		protected void setup(Context context) throws IOException, InterruptedException{
+			String filename = ((FileSplit)context.getInputSplit()).getPath().getName();
+			if(filename.indexOf("movies.dat") != -1) isMovie = true;
+   else isMovie = false;
 		}
 		public boolean isFantasy(String genres) {
 			if(genres.contains("Fantasy")) return true;
@@ -89,11 +88,11 @@ public class IMDBStudent20191013 {
  			if(isMovie) {
 				if(isFantasy(val[2])) {
 					DoubleKey outputK = new DoubleKey(val[0], "M");
-					context.write(outputK, new Text("Movie:" + val[1])); // Movie:Assasins (1995)
+					context.write(outputK, new Text("Movie::" + val[1])); // Movie:Assasins (1995)
 				}
 			}else {
 				DoubleKey outputK = new DoubleKey(val[1], "R");
-				context.write(outputK, new Text("Rating:" + val[2])); // Rating:5
+				context.write(outputK, new Text("Rating::" + val[2])); // Rating:5
 			}
 		}
 	}
@@ -108,7 +107,7 @@ public class IMDBStudent20191013 {
 			String movieTitle = "";
 			
 			for(Text val : values){
-				String[] v = val.toString().split(":");
+				String[] v = val.toString().split("::");
 				String fileName = v[0];
 				if(cnt == 0){ //최초 1회
 					if(fileName.equals("Rating")){
@@ -120,7 +119,7 @@ public class IMDBStudent20191013 {
 				}
 				cnt++;
 			}
-			if(sum > 0){
+			if(sum != 0){
 				double avg = sum/(cnt-1);
 				insertQueue(queue, movieTitle, avg, topK);
 			}
@@ -147,14 +146,12 @@ public class IMDBStudent20191013 {
 			this.title = _title;
 			this.avgRating = _avgRating;
 		}
-		public toString() {
-			return title + "," + avgRating;
-		}
+		
 		public String getTitle() {
-			return title;
+			return this.title;
 		}
 		public double getAvgRating() {
-			return avgRating;
+			return this.avgRating;
 		}
 		
 	}
