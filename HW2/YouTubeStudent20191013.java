@@ -1,35 +1,33 @@
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.uimport org.apache.hadoop.io.*;
+import org.apache.hadoop.mapreduce.*;
 import java.util.*;
-import org.apache.hadoop.fs.*;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.*;
-import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapred.lib.*;
 import org.apache.hadoop.mapreduce.lib.input.*;
 import org.apache.hadoop.mapreduce.lib.output.*;
 import org.apache.hadoop.util.GenericOptionsParser;
-import org.apache.hadoop.conf.Configuration;
-import java.lang.NumberFormatException;
-
-public class YouTubeStudent20191013 {
-	
-	public static class Youtube{
-		public String category;
-		public double avgRating;
-		
-		public Youtube(String _category, double _avgRating) {
-			this.category = _category;
-			this.avgRating = _avgRating;
-		}
-		public String getCategory() {
-			return this.category;
-		}
-		public double getAvgRating() {
-			return this.avgRating;
-		}
+  class Youtube{
+			public String category;
+			public double avgRating;
+			
+			public Youtube(String _category, double _avgRating) {
+				this.category = _category;
+				this.avgRating = _avgRating;
+			}
+			public String getCategory() {
+				return this.category;
+			}
+			public double getAvgRating() {
+				return this.avgRating;
+			}
 		
 	}
+public class YouTubeStudent20191013 {
 	
 	public static class YoutubeComparator implements Comparator<Youtube>{
 
@@ -54,8 +52,9 @@ public class YouTubeStudent20191013 {
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
 			String[] val = value.toString().split("|");
 			String category = val[3];
-			String avgRating = val[6].trim();
-			context.write(new Text(category), new DoubleWritable(Double.valueOf(avgRating)));
+			String avgRating = val[6];
+			double avg = Double.parseDouble(avgRating);
+			context.write(new Text(category), new DoubleWritable(avg));
 			
 		}
 		
@@ -74,7 +73,7 @@ public class YouTubeStudent20191013 {
 				cnt++;
 			}
 			
-			insertQueue(queue, key.toString(), sum/cnt, topK);
+			insertQueue(queue, key.toString(), sum/(double)cnt, topK);
 		}
 		
 		protected void setup(Context context) throws IOException, InterruptedException{
@@ -85,7 +84,7 @@ public class YouTubeStudent20191013 {
 		
 		protected void cleanup(Context context) throws IOException, InterruptedException{
 			while(queue.size() != 0) { //queue가 0될 때까지
-				Youtube youtube = queue.remove();
+					Youtube youtube = (Youtube)queue.remove();
 				context.write(new Text(youtube.getCategory()), new DoubleWritable(youtube.getAvgRating())); 
 			}
 		}
