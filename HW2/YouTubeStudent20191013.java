@@ -50,11 +50,18 @@ public class YouTubeStudent20191013 {
 	
 	public static class YouTubeMapper extends Mapper<Object, Text, Text, DoubleWritable>{
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
-			String[] val = value.toString().split("|");
-			String category = val[3];
-			String avgRating = val[6];
-			double avg = Double.parseDouble(avgRating);
-			context.write(new Text(category), new DoubleWritable(avg));
+			StringTokenizer itr = new StringTokenizer(value.toString(), "|");
+			String category = "";
+			String avgRating = "";
+			int i=0;
+			while(itr.hasMoreTokens()){
+				avgRating = itr.nextToken();
+				if(i==3){
+					category = avgRating;
+				}
+				i++;
+			}
+			context.write(new Text(category), new DoubleWritable(Double.valueOf(avgRating)));
 			
 		}
 		
@@ -84,7 +91,7 @@ public class YouTubeStudent20191013 {
 		
 		protected void cleanup(Context context) throws IOException, InterruptedException{
 			while(queue.size() != 0) { //queue가 0될 때까지
-					Youtube youtube = (Youtube)queue.remove();
+				Youtube youtube = (Youtube)queue.remove();
 				context.write(new Text(youtube.getCategory()), new DoubleWritable(youtube.getAvgRating())); 
 			}
 		}
@@ -107,11 +114,11 @@ public class YouTubeStudent20191013 {
 		job.setReducerClass(YouTubeReducer.class);
 		job.setNumReduceTasks(1);
 		
-		job.setMapOutputKeyClass(Text.class);
-		job.setMapOutputValueClass(DoubleWritable.class);
-		
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(DoubleWritable.class);
+		
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(DoubleWritable.class);
 		
 		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
