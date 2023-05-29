@@ -80,8 +80,10 @@ public class IMDBStudent20191013 {
    else isMovie = false;
 		}
 		public boolean isFantasy(String genres) {
-			if(genres.contains("Fantasy")) return true;
+			if(genres.toLowerCase().contains("fantasy")) return true;
 			else return false;
+		
+			
 		}
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
 			String val[] = value.toSting().split("::"); 
