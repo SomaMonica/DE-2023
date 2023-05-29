@@ -114,7 +114,7 @@ public class YouTubeStudent20191013 {
 		}
 		conf.setInt("topK", Integer.valueOf(otherArgs[2]));
 		Job job = new Job(conf, "YouTubeStudent20191013");
-		job.setJarByClass(YouTubeStudent20191059.class);
+		job.setJarByClass(YouTubeStudent20191013.class);
 		job.setMapperClass(YoutubeMapper.class);
 		job.setReducerClass(YoutubeReducer.class);
 		job.setNumReduceTasks(1);	
