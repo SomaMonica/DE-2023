@@ -67,11 +67,11 @@ public class IMDBStudent20191013 {
 	}
 	public static class FirstGroupingComparator extends WritableComparator{
 		protected FirstGroupingComparator() {
-			super(DoubleKey.class, true);
+			super(DoubleString.class, true);
 		}
 		public int compare(WritableComparable w1, WritableComparable w2) {
-			DoubleKey d1 = (DoubleKey) w1;
-			DoubleKey d2 = (DoubleKey) w2;
+			DoubleString d1 = (DoubleString) w1;
+			DoubleString d2 = (DoubleString) w2;
 			
 			return d1.movieId.compareTo(d2.movieId); // movieId만 가지고 비교 - 같은 value list에 넣음
 		}
@@ -94,14 +94,23 @@ public class IMDBStudent20191013 {
 	public static class TopKMovieMapper extends Mapper<Object, Text, DoubleString, Text>{
 		boolean isMovie = true;
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
-			String[] val = value.toSting().split("::"); 
+			String v = value.toString();
+			String[] val = v.split("::"); 
 			DoubleString outputK = new DoubleString();
 			Text outputV = new Text();
  			if(isMovie) {
 				String movieId = val[0];
 				String title = val[1];
 				String genres = val[2];
-				if(isFantasy(genres) == true) {
+				boolean isFantasy = false;
+				StringTokenizer itr = new StringTokenizer(genres, "|");
+				while(itr.hasMoreTokens()){
+					if((itr.nextToken()).equals("Fantasy")){
+						isFantasy = true;
+						break;
+					}
+				}
+				if(isFantasy) {
 					outputK = new DoubleString(movieId, "Movies");
 					outputV.set("Movies::" + title);
 					context.write(outputK, outputV); // Movie:Assasins (1995)
@@ -119,11 +128,6 @@ public class IMDBStudent20191013 {
 			String filename = ((FileSplit)context.getInputSplit()).getPath().getName();
 			if(filename.indexOf("movies.dat") != -1) isMovie = true;
    			else isMovie = false;
-		}
-		public boolean isFantasy(String genres) {
-			if(genres.toLowerCase().contains("fantasy")) return true;
-			else return false;
-			
 		}
 	}
 	public static class TopKMovieReducer extends Reducer<DoubleString, Text, Text, DoubleWritable>{
@@ -204,12 +208,12 @@ public class IMDBStudent20191013 {
 		job.setMapperClass(TopKMovieMapper.class);
 		job.setReducerClass(TopKMovieReducer.class);
 		
-		job.setMapOutputKeyClass(DoubleString.class);
-		job.setMapOutputValueClass(Text.class);
-		
 		job.setPartitionerClass(FirstPartitioner.class);
 		job.setGroupingComparatorClass(FirstGroupingComparator.class);
 		job.setSortComparatorClass(CompositeKeyComparator.class);
+		
+		job.setMapOutputKeyClass(DoubleString.class);
+		job.setMapOutputValueClass(Text.class);
 		
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(DoubleWritable.class);
