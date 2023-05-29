@@ -96,31 +96,33 @@ public class IMDBStudent20191013 {
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
 			String v = value.toString();
 			String[] val = v.split("::"); 
-			DoubleString outputK = new DoubleString();
-			Text outputV = new Text();
- 			if(isMovie) {
-				String movieId = val[0];
-				String title = val[1];
-				String genres = val[2];
-				boolean isFantasy = false;
-				StringTokenizer itr = new StringTokenizer(genres, "|");
-				while(itr.hasMoreTokens()){
-					if((itr.nextToken()).equals("Fantasy")){
-						isFantasy = true;
-						break;
+			if (val.length > 1){
+				DoubleString outputK = new DoubleString();
+				Text outputV = new Text();
+	 			if(isMovie) {
+					String movieId = val[0].trim();
+					String title = val[1];
+					String genres = val[2].trim();
+					boolean isFantasy = false;
+					StringTokenizer itr = new StringTokenizer(genres, "|");
+					while(itr.hasMoreTokens()){
+						if((itr.nextToken()).equals("Fantasy")){
+							isFantasy = true;
+							break;
+						}
 					}
+					if(isFantasy) {
+						outputK = new DoubleString(movieId, "Movies");
+						outputV.set("Movies::" + title);
+						context.write(outputK, outputV); // Movie:Assasins (1995)
+					}
+				}else {
+					String movieId = val[1];
+					String avgRating = val[2];
+					outputK = new DoubleString(movieId, "Ratings");
+					outputV.set("Ratings::" + avgRating);
+					context.write(outputK, outputV); // Rating:5
 				}
-				if(isFantasy) {
-					outputK = new DoubleString(movieId, "Movies");
-					outputV.set("Movies::" + title);
-					context.write(outputK, outputV); // Movie:Assasins (1995)
-				}
-			}else {
-				String movieId = val[1];
-				String avgRating = val[2];
-				outputK = new DoubleString(movieId, "Ratings");
-				outputV.set("Ratings::" + avgRating);
-				context.write(outputK, outputV); // Rating:5
 			}
 		}
 				
