@@ -126,12 +126,12 @@ public class IMDBStudent20191013 {
 			
 		}
 	}
-	public static class TopKMovieReducer extends Reducer<DoubleKey, Text, Text, DoubleWritable>{
+	public static class TopKMovieReducer extends Reducer<DoubleString, Text, Text, DoubleWritable>{
 		private PriorityQueue<Movie> queue;
 		private Comparator<Movie> comp = new MovieComparator();
 		private int topK;
 		
-		public void reduce(DoubleKey key, Iterable<Text> values, Context context) throws IOException, InterruptedException{
+		public void reduce(DoubleString key, Iterable<Text> values, Context context) throws IOException, InterruptedException{
 			int cnt = 0;
 			double sum = 0;
 			String movieTitle = "";
@@ -140,7 +140,7 @@ public class IMDBStudent20191013 {
 				String[] v = val.toString().split("::");
 				String fileName = v[0];
 				if(cnt == 0){ //최초 1회
-					if(fileName.equals("Rating")){
+					if(fileName.equals("Ratings")){
 						break;
 					}
 					movieTitle = v[1];
@@ -204,7 +204,7 @@ public class IMDBStudent20191013 {
 		job.setMapperClass(TopKMovieMapper.class);
 		job.setReducerClass(TopKMovieReducer.class);
 		
-		job.setMapOutputKeyClass(DoubleKey.class);
+		job.setMapOutputKeyClass(DoubleString.class);
 		job.setMapOutputValueClass(Text.class);
 		
 		job.setPartitionerClass(FirstPartitioner.class);
