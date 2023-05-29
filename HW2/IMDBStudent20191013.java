@@ -11,16 +11,33 @@ import org.apache.hadoop.mapreduce.lib.output.*;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 public class IMDBStudent20191013 {
-	public static class DoubleKey implements WritableComparable{
+	public static class Movie{
+		public String title;
+		public double avgRating;
+		
+		public Movie(String title, double avgRating) {
+			this.title = title;
+			this.avgRating = avgRating;
+		}
+		
+		public String getTitle() {
+			return this.title;
+		}
+		public double getAvgRating() {
+			return this.avgRating;
+		}
+		
+	}
+	public static class DoubleString implements WritableComparable{
 		String movieId = new String(); // join key = MovieID
 		String tableName = new String(); // Movies.dat & Ratings.dat
 
-		public DoubleKey() {}
+		public DoubleString() {}
 
-		public DoubleKey(String movieId, String tableName) {
+		public DoubleString(String _movieId, String _tableName) {
 			super();
-			this.movieId = movieId;
-			this.tableName = tableName;
+			this.movieId = _movieId;
+			this.tableName = _tableName;
 		}
 		
 		//WritableComparable interface methods
@@ -34,14 +51,17 @@ public class IMDBStudent20191013 {
 		}
 		
 		public int compareTo(Object o1) {
-			DoubleKey d = (DoubleKey) o1;
-			int ret = movieId.compareTo(d.movieId);
+			DoubleString o = (DoubleString) o1;
+			int ret = movieId.compareTo(o.movieId);
 			if(ret != 0) return ret;
-			return tableName.compareTo(d.tableName); //M --> R
+			return tableName.compareTo(o.tableName); //M --> R
+		}
+		public String toString(){
+			return movieId + " " + tableName;
 		}
 	}
-	public static class FirstPartitioner extends Partitioner<DoubleKey, Text>{
-		public int getPartition(DoubleKey key, Text value, int numPartition) {
+	public static class FirstPartitioner extends Partitioner<DoubleString, Text>{
+		public int getPartition(DoubleString key, Text value, int numPartition) {
 			return key.movieId.hashCode()%numPartition;
 		}
 	}
@@ -58,11 +78,11 @@ public class IMDBStudent20191013 {
 	}
 	public static class CompositeKeyComparator extends WritableComparator{
 		protected CompositeKeyComparator() {
-			super(DoubleKey.class, true);
+			super(DoubleString.class, true);
 		}
 		public int compare(WritableComparable w1, WritableComparable w2) {
-			DoubleKey d1 = (DoubleKey) w1;
-			DoubleKey d2 = (DoubleKey) w2;
+			DoubleString d1 = (DoubleString) w1;
+			DoubleString d2 = (DoubleString) w2;
 			
 			int rslt = d1.movieId.compareTo(d2.movieId);
 			if(0 == rslt) {
@@ -71,31 +91,39 @@ public class IMDBStudent20191013 {
 			return rslt;
 		}
 	}
-	public static class TopKMovieMapper extends Mapper<Object, Text, DoubleKey, Text>{
+	public static class TopKMovieMapper extends Mapper<Object, Text, DoubleString, Text>{
 		boolean isMovie = true;
-		
+		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
+			String[] val = value.toSting().split("::"); 
+			DoubleString outputK = new DoubleString();
+			Text outputV = new Text();
+ 			if(isMovie) {
+				String movieId = val[0];
+				String title = val[1];
+				String genres = val[2];
+				if(isFantasy(genres) == true) {
+					outputK = new DoubleString(movieId, "Movies");
+					outputV.set("Movies::" + title);
+					context.write(outputK, outputV); // Movie:Assasins (1995)
+				}
+			}else {
+				String movieId = val[1];
+				String avgRating = val[2];
+				outputK = new DoubleString(movieId, "Ratings");
+				outputV.set("Ratings::" + avgRating);
+				context.write(outputK, outputV); // Rating:5
+			}
+		}
+				
 		protected void setup(Context context) throws IOException, InterruptedException{
 			String filename = ((FileSplit)context.getInputSplit()).getPath().getName();
 			if(filename.indexOf("movies.dat") != -1) isMovie = true;
-   else isMovie = false;
+   			else isMovie = false;
 		}
 		public boolean isFantasy(String genres) {
 			if(genres.toLowerCase().contains("fantasy")) return true;
 			else return false;
-		
 			
-		}
-		public void map(Object key, Text value, Context context) throws IOException, InterruptedException{
-			String val[] = value.toSting().split("::"); 
- 			if(isMovie) {
-				if(isFantasy(val[2])) {
-					DoubleKey outputK = new DoubleKey(val[0], "M");
-					context.write(outputK, new Text("Movie::" + val[1])); // Movie:Assasins (1995)
-				}
-			}else {
-				DoubleKey outputK = new DoubleKey(val[1], "R");
-				context.write(outputK, new Text("Rating::" + val[2])); // Rating:5
-			}
 		}
 	}
 	public static class TopKMovieReducer extends Reducer<DoubleKey, Text, Text, DoubleWritable>{
@@ -140,23 +168,6 @@ public class IMDBStudent20191013 {
 			}
 		}
 	}
-	public static class Movie{
-		public String title;
-		public double avgRating;
-		
-		public Movie(String _title, double _avgRating) {
-			this.title = _title;
-			this.avgRating = _avgRating;
-		}
-		
-		public String getTitle() {
-			return this.title;
-		}
-		public double getAvgRating() {
-			return this.avgRating;
-		}
-		
-	}
 	
 	public static class MovieComparator implements Comparator<Movie>{
 
@@ -164,7 +175,7 @@ public class IMDBStudent20191013 {
 		public int compare(Movie o1, Movie o2) {
 			if(o1.avgRating > o2.avgRating) return 1; // avgRating 큰 순서대로 = 내림차순
 			if(o1.avgRating < o2.avgRating) return -1; 	
-			return 0;
+			else return 0;
 		}
 	}
 	
