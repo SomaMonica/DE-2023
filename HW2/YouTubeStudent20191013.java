@@ -16,7 +16,7 @@ class Youtube {
 	public String category;
 	public double average;
 	
-	public Video(String category, double average) {
+	public Youtube(String category, double average) {
 		this.category = category;
 		this.average = average;
 	}
