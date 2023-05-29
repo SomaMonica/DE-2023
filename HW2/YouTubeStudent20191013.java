@@ -1,7 +1,7 @@
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.uimport org.apache.hadoop.io.*;
+import org.apache.hadoop.io.*;
 import org.apache.hadoop.mapreduce.*;
 import java.util.*;
 import org.apache.hadoop.conf.*;
