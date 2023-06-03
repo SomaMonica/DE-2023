@@ -17,10 +17,10 @@ public final class WordCount_spark implements Serializable{
 		}
 		
 		SparkSession spark = SparkSession.builder()
-										.appName("WordCount")
-										.getOrCreate();
+						.appName("WordCount")
+						.getOrCreate();
 		
-		JavaRDD<String> lines = spark.read().testFile(args[0]).javaRDD(); // read text file
+		JavaRDD<String> lines = spark.read().textFile(args[0]).javaRDD(); // read text file
 		
 		FlatMapFunction<String, String> fmf = new FlatMapFunction<String, String>(){ // FlatMapFunction = flatMap()의 parameter type
 			public Iterator<String> call(String s){
