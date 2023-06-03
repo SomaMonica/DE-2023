@@ -45,10 +45,10 @@ public class Join_spark implements Serializable{
 		}
 		
 		SparkSession spark = SparkSession.builder()
-										.appName("Join_spark")
-										.getOrCreate();
+						.appName("Join_spark")
+						.getOrCreate();
 		
-		JavaRDD<String> products = spark.read().testFile(args[0]).javaRDD(); // read relation_a
+		JavaRDD<String> products = spark.read().textFile(args[0]).javaRDD(); // read relation_a
 		
 		PairFunction<String, String, Product> pfA = new PairFunction<String, String, Product>(){ // relation_a
 			public Tuple2<String, Product> call(String s){
@@ -62,7 +62,7 @@ public class Join_spark implements Serializable{
 		};
 		JavaPairRDD<String, Product> pTuples = products.mapToPair(pfA);
 		
-		JavaRDD<String> codes = spark.read().testFile(args[1]).javaRDD(); // read relation_b
+		JavaRDD<String> codes = spark.read().textFile(args[1]).javaRDD(); // read relation_b
 		
 		PairFunction<String, String, Code> pfB = new PairFunction<String, String, Code>(){
 			public Tuple2<String, Code> call(String s){
