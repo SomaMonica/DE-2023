@@ -11,12 +11,15 @@ import java.util.regex.Pattern;
 
 public class IMDBStudent20191013 implements Serializable{
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception{
 		if(args.length != 2) {
 			System.err.println("Usage: IMDBStudent20191013 <in_file> <out_file>");
 			System.exit(1);
 		}
-		SparkSession spark = SparkSession.builder().appName("IMDBStudent20191013").getOrCreate();
+		SparkSession spark = SparkSession
+			.builder()
+			.appName("IMDBStudent20191013")
+			.getOrCreate();
 		
 		JavaRDD<String> movies = spark.read().textFile(args[0]).javaRDD(); 
 		
@@ -42,8 +45,8 @@ public class IMDBStudent20191013 implements Serializable{
 			}
 		};
 		JavaPairRDD<String, Integer> counts = ones.reduceByKey(f2);
-		
-		counts.saveAsTextFile(args[1]);
+		JavaPairRDD<String> rslt = counts.map(x -> x._1 + " " + x._2);
+		rslt.saveAsTextFile(args[1]);
 		spark.stop();
 
 	}
