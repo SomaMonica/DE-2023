@@ -49,18 +49,19 @@ public class UBERStudent20191013 implements Serializable{
   		return rslt;
 	}
 	public static void main(String[] args) {
-		if(args.length != 2) {
+		if(args.length < 1) {
 			System.err.println("Usage: UBERStudent20191013 <in-file> <out-file>");
 			System.exit(1);
 		}
 		
 		SparkSession spark = SparkSession.builder()
-								.appName("UBERStudent20191013")
-								.getOrCreate();
+						.appName("UBERStudent20191013")
+						.getOrCreate();
 		
 		JavaRDD<String> ubers = spark.read().textFile(args[0]).javaRDD();
 		
-		PairFunction<String, String, String> pf = new PairFunction<String, String, String>(){ // input, outputK, outputV
+		//map
+		JavaPairRDD<String, String> uber = ubers.mapToPair(new PairFunction<String, String, String>(){ // input, outputK, outputV
 			public Tuple2<String, String> call(String s){
 				StringTokenizer itr = new StringTokenizer(s, ",");
 				String baseNum = itr.nextToken();
@@ -70,10 +71,9 @@ public class UBERStudent20191013 implements Serializable{
 				
 				return new Tuple2(baseNum + "," + getDay(date), trips + "," + vehicles);
 			}
-		};
-		JavaPairRDD<String, String> uberTuples = ubers.mapToPair(pf);
+		});
 		
-		Function2<String, String, String> f2 = new Function2<String, String, String>(){
+		JavaPairRDD<String, String> rslt = uber.reduceByKey(new Function2<String, String, String>(){
 			public String call(String x, String y) {
 				StringTokenizer xItr = new StringTokenizer(x, ","); 
 				int xTrips = Integer.parseInt(xItr.nextToken());
@@ -88,8 +88,7 @@ public class UBERStudent20191013 implements Serializable{
 				
 				return xTrips + "," + xVehicles;
 			}
-		};
-		JavaPairRDD<String, String> rslt = uberTuples.reduceByKey(f2);
+		});
 		
 		rslt.saveAsTextFile(args[1]);
 		spark.stop();
