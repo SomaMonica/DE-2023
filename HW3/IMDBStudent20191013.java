@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 public class IMDBStudent20191013 implements Serializable{
 
 	public static void main(String[] args) throws Exception{
-		if(args.length != 2) {
+		if(args.length < 1) {
 			System.err.println("Usage: IMDBStudent20191013 <in_file> <out_file>");
 			System.exit(1);
 		}
@@ -27,7 +27,7 @@ public class IMDBStudent20191013 implements Serializable{
 			public Iterator<String> call(String s){
 				String movie[] = s.split("::");
 				String genres = movie[2];
-				return Arrays.asList(s.split("|")).iterator(); // genres
+				return Arrays.asList(genres.split("|")).iterator(); // genres
 			}
 		}; 
 		JavaRDD<String> genres = movies.flatMap(fmf);
